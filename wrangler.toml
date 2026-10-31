@@ -1,0 +1,16 @@
+# Cloudflare Pages settings for the web version (read automatically on deploy).
+# Secrets (OPENROUTER_API_KEY) are set in the dashboard, never here.
+name = "cozy-pal"
+pages_build_output_dir = "build/web"
+compatibility_date = "2026-09-01"
+
+[vars]
+# daily AI time resets at midnight Bangkok time (UTC+7)
+QUOTA_TZ_OFFSET_MINUTES = "420"
+GUEST_SECONDS = "600"
+MEMBER_SECONDS = "1200"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cozypal"
+database_id = "57dde3aa-8723-4654-9fa7-06f7bfd4d6e2"
