@@ -23,8 +23,8 @@ class AiQuota {
   String get leftLabel {
     final r = remainingSec;
     if (r <= 0) return 'No AI time left today';
-    if (r < 60) return '${r.round()} s left';
-    return '${(r / 60).floor()} min left';
+    if (r < 60) return '${r.ceil()} s left';
+    return '${(r / 60).ceil()} min left';
   }
 
   static AiQuota fromJson(Map<String, dynamic> j) => AiQuota(

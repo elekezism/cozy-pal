@@ -59,7 +59,8 @@ class AiTimeChip extends StatelessWidget {
       builder: (context, _) {
         final q = pet.account.quota;
         if (q == null) return const SizedBox.shrink();
-        final mins = q.remainingSec >= 60 ? '${(q.remainingSec / 60).floor()} min' : '${q.remainingSec.round()} s';
+        // round up: 9:58 left still reads "10 min"
+        final mins = q.remainingSec >= 60 ? '${(q.remainingSec / 60).ceil()} min' : '${q.remainingSec.ceil()} s';
         return Semantics(
           button: true,
           label: 'AI time left today: $mins',
