@@ -1,0 +1,85 @@
+# Builds Cozy Pal for Android and iOS in the cloud, including the Cactus
+# engine. Push this project to a GitHub repo, then open Actions → "Build app"
+# → "Run workflow". Download the results from the run's Artifacts section.
+name: Build app
+
+# Phone builds run when you start them (Actions → Build app → Run workflow);
+# the web version is built and hosted by Cloudflare Pages (tool/cf_build.sh).
+on:
+  workflow_dispatch:
+
+env:
+  CACTUS_REF: main   # pin to a commit or tag of github.com/cactus-compute/cactus for repeatable builds
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build Cactus engine for Android
+        run: |
+          git clone --depth 1 --branch "$CACTUS_REF" https://github.com/cactus-compute/cactus.git ../cactus
+          export ANDROID_NDK_HOME="$ANDROID_NDK_LATEST_HOME"
+          bash ../cactus/android/build.sh
+
+      - name: Create platform folders
+        run: |
+          flutter create --org com.cozypal --project-name cozy_pal --platforms android,ios .
+          dart run tool/setup_platforms.dart --cactus ../cactus
+
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cozy-pal-android
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build Cactus engine for iOS
+        run: |
+          git clone --depth 1 --branch "$CACTUS_REF" https://github.com/cactus-compute/cactus.git ../cactus
+          bash ../cactus/apple/build.sh
+
+      - name: Create platform folders
+        run: |
+          flutter create --org com.cozypal --project-name cozy_pal --platforms android,ios .
+          dart run tool/setup_platforms.dart --cactus ../cactus
+
+      - run: flutter pub get
+
+      # Unsigned build packed as an .ipa. Install it on an iPhone from Windows
+      # with Sideloadly (it signs the app with your Apple ID) — see README.
+      - run: flutter build ios --release --no-codesign
+
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qr cozy-pal-unsigned.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cozy-pal-ios
+          path: cozy-pal-unsigned.ipa

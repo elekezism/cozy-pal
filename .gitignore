@@ -1,0 +1,16 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/
+.DS_Store
+
+# Built Cactus engine binaries (rebuild with the cactus repo or CI)
+packages/cactus_native/android/src/main/jniLibs/arm64-v8a/*.so
+packages/cactus_native/ios/cactus-ios.xcframework/

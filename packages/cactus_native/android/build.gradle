@@ -1,0 +1,39 @@
+// Packages the prebuilt libcactus_engine.so from src/main/jniLibs/arm64-v8a/.
+// Put it there with tool/setup_platforms.dart (or the GitHub workflow).
+
+group = "com.cozypal.cactus_native"
+version = "1.0"
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.7.3")
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.android.library"
+
+android {
+    namespace = "com.cozypal.cactus_native"
+    compileSdk = 35
+
+    defaultConfig {
+        minSdk = 24
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}

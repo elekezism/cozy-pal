@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Signing in…</title><meta name="viewport" content="width=device-width"></head>
+<body style="font-family:system-ui,sans-serif;background:#FFF8E8;color:#5B2B2A;display:grid;place-items:center;height:100vh;margin:0">
+<p>Signing you in… you can close this window.</p>
+<script>
+  // Gmail / Outlook send the result here; hand it to the Cozy Pal tab that opened us.
+  var data = (location.hash || '').replace(/^#/, '') || (location.search || '').replace(/^\?/, '');
+  if (window.opener) {
+    window.opener.postMessage('cozypal-oauth:' + data, location.origin);
+    window.close();
+  }
+</script>
+</body>
+</html>

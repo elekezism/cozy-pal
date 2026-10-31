@@ -1,0 +1,44 @@
+name: cozy_pal
+description: A cozy pocket pet that answers questions, reads your mail and keeps your voice notes.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.9.0 <4.0.0'
+  flutter: '>=3.35.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # on-device AI (Cactus engine via FFI)
+  ffi: ^2.1.4
+  cactus_native:
+    path: packages/cactus_native
+  archive: ^4.0.7
+  # networking + storage
+  http: ^1.5.0
+  path_provider: ^2.1.5
+  shared_preferences: ^2.5.3
+  flutter_secure_storage: ^10.3.4
+  uuid: ^4.5.1
+  url_launcher: ^6.3.3
+  flutter_contacts: ^1.1.7
+  # audio
+  record: ^7.1.1
+  audioplayers: ^6.8.1
+  flutter_tts: ^4.2.5
+  # email
+  flutter_appauth: ^12.1.0
+  enough_mail: '>=2.1.7 <4.0.0'
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: PatrickHand   # hand-lettered UI font (SIL Open Font License, see assets/fonts)
+      fonts:
+        - asset: assets/fonts/PatrickHand-Regular.ttf
