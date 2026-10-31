@@ -55,6 +55,27 @@ The same app also runs in the browser. Cloudflare Pages builds it straight from 
 
 The script installs Flutter, adds the web files and runs `flutter build web`. `functions/api/fetch.js` is deployed with it: a small allow-listed proxy so the browser can reach Apple's song search, meme-api.com and itch.io (browsers block those cross-site reads otherwise).
 
+**Free built-in AI (AI time):** the app's default AI, *Cozy Pal AI*, needs no key. It runs `nvidia/nemotron-3.5-super-vl:free` on OpenRouter through this site's server (`functions/api/ai/chat.js`), so your OpenRouter key never reaches the app. Each answer is timed on the server, from asking OpenRouter until the reply is back (at least 1 second per answer), and that time comes out of a daily allowance:
+
+| | AI time per day |
+|---|---|
+| Guest (automatic, no sign-up) | 10 minutes |
+| Account (email + password) | 20 minutes |
+
+- Signing up mid-day keeps what the guest already used, so nobody gets 10 + 20. Guests sharing one network get at most 3 × 10 minutes between them, so clearing the browser doesn't reset the limit forever.
+- Time isn't charged when OpenRouter fails or is busy. The day resets at midnight (UTC, or set `QUOTA_TZ_OFFSET_MINUTES`, e.g. `420` for Bangkok).
+- Passwords are stored as PBKDF2 hashes, sign-in is rate-limited, and sessions are random tokens stored hashed. There is no email verification or password reset yet.
+- People can still choose Claude, ChatGPT, Gemini or any OpenAI-compatible service with their own key in Settings; that isn't counted.
+
+**Server setup for the AI time (Cloudflare dashboard → your Pages project → Settings):**
+1. *Bindings* → add a **D1 database** binding named `DB` (create a database, e.g. `cozypal`, under Storage & Databases → D1). Tables are created automatically on first use.
+2. *Variables and Secrets* → add `OPENROUTER_API_KEY` as an **encrypted secret** (from openrouter.ai/keys). Optional plain variables: `QUOTA_TZ_OFFSET_MINUTES`, `GUEST_SECONDS` (600), `MEMBER_SECONDS` (1200), `AI_MODEL`.
+3. Redeploy (Deployments → Retry) so the new settings apply.
+
+Free OpenRouter models are limited to 20 requests a minute, and **50 requests a day for the whole site** unless the OpenRouter account has bought at least 10 credits once (then 1,000 a day). For more than a handful of users, add credits or switch `AI_MODEL` to a paid model.
+
+The phone apps use the same server: set its address in the app (default `https://cozy-pal.pages.dev`, or build with `--dart-define=COZY_SERVER=https://your-site`).
+
 **What's different in the browser**
 
 | | Phone app | Web |
@@ -163,12 +184,14 @@ lib/
     settings_service.dart    choices + secure keys
     actions_service.dart     contacts, prefilled Messages/WhatsApp/Mail, App Store / Play Store
     interest_engine.dart     on-device recommender: signals, decay, Thompson sampling, ranking
+    account_service.dart     Cozy Pal account, guest session, AI-time quota
     cheer_service.dart       cheer-up: learns your likes, picks a song/video (YouTube), meme or itch.io game, deletes after
   models/character.dart      the pet friends and how they unlock
   ui/                        the room, the pet, record panel, notes box, note page, letter card, app card, cheer card (YouTube song/video, meme, itch.io game), settings
   platform/                  phone vs browser: storage, speech, sign-in popup, CORS proxy helper
 packages/cactus_native/      bundles the engine binary into the app
-functions/api/fetch.js       Cloudflare Pages Function (web only): allow-listed CORS proxy
+functions/api/               Cloudflare Pages Functions: fetch.js (CORS proxy), auth/*, me.js, ai/chat.js (AI time)
+server/cozy.js               accounts, sessions, daily AI-time metering (D1)
 web/                         extra web files (oauth.html, _headers); Flutter adds the rest at build time
 tool/cf_build.sh             Cloudflare Pages build script
 tool/setup_platforms.dart    permissions, app id, iOS 16.4, copies the engine

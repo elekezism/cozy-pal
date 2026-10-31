@@ -3,7 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Cloud AI that writes the answers. The user picks one in Settings.
-enum AiProvider { claude, openai, gemini, custom }
+/// (New entries go at the end: the choice is saved by position.)
+enum AiProvider { claude, openai, gemini, custom, cozy }
 
 extension AiProviderInfo on AiProvider {
   String get label => switch (this) {
@@ -11,6 +12,7 @@ extension AiProviderInfo on AiProvider {
         AiProvider.openai => 'ChatGPT (OpenAI)',
         AiProvider.gemini => 'Gemini (Google)',
         AiProvider.custom => 'Other (OpenAI-compatible)',
+        AiProvider.cozy => 'Cozy Pal AI (free)',
       };
 
   String get defaultModel => switch (this) {
@@ -18,6 +20,7 @@ extension AiProviderInfo on AiProvider {
         AiProvider.openai => 'gpt-5.4-mini',
         AiProvider.gemini => 'gemini-flash-latest',
         AiProvider.custom => '',
+        AiProvider.cozy => 'nvidia/nemotron-3.5-super-vl:free',
       };
 
   /// Short line shown on the picker card.
@@ -26,6 +29,7 @@ extension AiProviderInfo on AiProvider {
         AiProvider.openai => 'The ChatGPT models',
         AiProvider.gemini => "Google's fast Flash models",
         AiProvider.custom => 'OpenRouter, Groq, Ollama…',
+        AiProvider.cozy => 'Free, no key: 10 min a day, 20 with an account',
       };
 
   String get shortName => switch (this) {
@@ -33,6 +37,7 @@ extension AiProviderInfo on AiProvider {
         AiProvider.openai => 'ChatGPT',
         AiProvider.gemini => 'Gemini',
         AiProvider.custom => 'Other',
+        AiProvider.cozy => 'Cozy Pal AI',
       };
 
   /// Where to create an API key.
@@ -41,6 +46,7 @@ extension AiProviderInfo on AiProvider {
         AiProvider.openai => 'https://platform.openai.com/api-keys',
         AiProvider.gemini => 'https://aistudio.google.com/apikey',
         AiProvider.custom => 'https://openrouter.ai/keys',
+        AiProvider.cozy => 'https://openrouter.ai/nvidia/nemotron-3.5-super-vl:free',
       };
 
   String get keyHint => switch (this) {
@@ -48,6 +54,7 @@ extension AiProviderInfo on AiProvider {
         AiProvider.openai => 'sk-…  (platform.openai.com)',
         AiProvider.gemini => 'AIza…  (aistudio.google.com)',
         AiProvider.custom => 'Key for your provider (blank for local servers)',
+        AiProvider.cozy => '',
       };
 }
 
@@ -113,7 +120,7 @@ class SettingsService extends ChangeNotifier {
 
   // ---------- AI ----------
   AiProvider get aiProvider =>
-      AiProvider.values[_p.getInt('ai_provider') ?? AiProvider.claude.index];
+      AiProvider.values[_p.getInt('ai_provider') ?? AiProvider.cozy.index]; // free built-in AI by default
   set aiProvider(AiProvider v) {
     _p.setInt('ai_provider', v.index);
     notifyListeners();
@@ -123,6 +130,16 @@ class SettingsService extends ChangeNotifier {
       _p.getString('ai_model_${p.name}') ?? p.defaultModel;
   Future<void> setModelFor(AiProvider p, String model) async {
     await _p.setString('ai_model_${p.name}', model.trim());
+    notifyListeners();
+  }
+
+  /// Where the Cozy Pal server (the Cloudflare Pages site) lives. The web
+  /// version uses its own address; the phone apps use this.
+  String get cozyServer => kIsWeb
+      ? Uri.base.origin
+      : (_p.getString('cozy_server') ?? const String.fromEnvironment('COZY_SERVER', defaultValue: 'https://cozy-pal.pages.dev'));
+  set cozyServer(String v) {
+    _p.setString('cozy_server', v.trim().replaceAll(RegExp(r'/+$'), ''));
     notifyListeners();
   }
 

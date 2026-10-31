@@ -5,6 +5,8 @@ import 'package:flutter/scheduler.dart';
 
 import '../models/character.dart';
 import '../pet_controller.dart';
+import '../services/settings_service.dart';
+import 'account_sheet.dart';
 import 'app_sheet.dart';
 import 'ask_sheet.dart';
 import 'cheer_sheet.dart';
@@ -79,6 +81,8 @@ class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateM
         if (item != null) showCheerSheet(context, pet, item);
       case PetEvent.support:
         showSupportSheet(context);
+      case PetEvent.openAccount:
+        showAccountSheet(context, pet);
       case PetEvent.newTreatFriend:
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('A new friend unlocked! Tap the wardrobe to meet them.'),
@@ -146,6 +150,10 @@ class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateM
                 const SizedBox(width: 10),
                 _Counter(icon: '📝', value: pet.notes.notes.length, label: 'Notes in the box', seed: 7),
                 const Spacer(),
+                if (pet.settings.aiProvider == AiProvider.cozy) ...[
+                  AiTimeChip(pet: pet),
+                  const SizedBox(width: 10),
+                ],
                 DoodleButton(
                   tooltip: 'Friends',
                   onTap: () => showWardrobeSheet(context, pet),

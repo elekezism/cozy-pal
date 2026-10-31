@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../ai/model_manager.dart';
 import '../pet_controller.dart';
+import 'account_sheet.dart';
 import '../platform/oauth.dart';
 import '../services/cheer_service.dart';
 import '../services/email_service.dart';
@@ -319,7 +320,7 @@ class _StatusStrip extends StatelessWidget {
 
   Future<(bool, bool)> _check() async {
     final key = await pet.settings.apiKeyFor(pet.settings.aiProvider) ?? '';
-    final ai = key.isNotEmpty || pet.settings.aiProvider == AiProvider.custom;
+    final ai = key.isNotEmpty || pet.settings.aiProvider == AiProvider.custom || pet.settings.aiProvider == AiProvider.cozy;
     final mail = await pet.email.isSignedIn();
     return (ai, mail);
   }
@@ -384,12 +385,14 @@ class _AiSectionState extends State<_AiSection> {
     AiProvider.openai: Pal.mint,
     AiProvider.gemini: Pal.blue,
     AiProvider.custom: Pal.lilac,
+    AiProvider.cozy: Pal.note,
   };
   static const _badges = {
     AiProvider.claude: 'C',
     AiProvider.openai: 'G',
     AiProvider.gemini: '✦',
     AiProvider.custom: '…',
+    AiProvider.cozy: '🐾',
   };
 
   @override
@@ -495,22 +498,36 @@ class _AiSectionState extends State<_AiSection> {
       seed: 21,
       children: [
         _ChoiceGrid(children: [
-          for (final a in AiProvider.values)
+          for (final a in [AiProvider.cozy, ...AiProvider.values.where((x) => x != AiProvider.cozy)])
             _ChoiceCard(
               title: a.shortName,
               blurb: a.blurb,
               badge: _badges[a]!,
               color: _colors[a]!,
               selected: a == p,
-              done: _hasKey[a] ?? false,
+              done: a == AiProvider.cozy ? widget.pet.account.quota != null : (_hasKey[a] ?? false),
               onTap: () async {
                 await _save();
                 s.aiProvider = a;
+                if (a == AiProvider.cozy) widget.pet.account.ensureSession();
                 await _load();
               },
             ),
         ]),
         const SizedBox(height: 14),
+        if (p == AiProvider.cozy) ...[
+          Text(
+            'Free and ready to go: answers come from ${AiProvider.cozy.defaultModel} through the Cozy Pal server. '
+            'Guests get 10 minutes of AI time a day, accounts 20. Or pick another AI above and use your own key.',
+            style: _hand.copyWith(fontSize: 15, color: ink.withValues(alpha: 0.75)),
+          ),
+          const SizedBox(height: 12),
+          AccountPanel(pet: widget.pet),
+          const SizedBox(height: 12),
+          Wrap(spacing: 10, runSpacing: 10, children: [
+            _PillButton(label: 'Test it', icon: Icons.check_circle_outline_rounded, busy: _testing, onTap: _test),
+          ]),
+        ] else ...[
         if (p == AiProvider.custom) ...[
           TextField(
             controller: _base,
@@ -562,6 +579,7 @@ class _AiSectionState extends State<_AiSection> {
           _PillButton(label: 'Save & test', icon: Icons.check_circle_outline_rounded, busy: _testing, onTap: _test),
           if (hasKey) _PillButton(label: 'Remove key', icon: Icons.delete_outline_rounded, color: Colors.white, onTap: _removeKey),
         ]),
+        ],
       ],
     );
   }

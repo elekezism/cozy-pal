@@ -7,6 +7,7 @@ import 'ai/local_ai.dart';
 import 'ai/model_manager.dart';
 import 'models/character.dart';
 import 'platform/store.dart' as store;
+import 'services/account_service.dart';
 import 'services/actions_service.dart';
 import 'services/cheer_service.dart';
 import 'services/email_service.dart';
@@ -36,7 +37,7 @@ enum PetMood {
 enum HeldItem { none, book, letter, note, mic, gift }
 
 /// Requests from the pet to the screen.
-enum PetEvent { openSettings, openNotes, openFind, openMailSettings, newTreatFriend, composeMessage, getApp, cheer, support }
+enum PetEvent { openSettings, openNotes, openFind, openMailSettings, newTreatFriend, composeMessage, getApp, cheer, support, openAccount }
 
 /// Where the pet stands for each job, in room ("world") units on the
 /// 10 x 10 isometric floor (see ui/room_layout.dart).
@@ -65,6 +66,7 @@ class PetController extends ChangeNotifier {
     required this.memory,
     required this.actions,
     required this.cheer,
+    required this.account,
   }) {
     voice.speaking.addListener(notifyListeners);
   }
@@ -79,6 +81,7 @@ class PetController extends ChangeNotifier {
   final MemoryService memory;
   final ActionsService actions;
   final CheerService cheer;
+  final AccountService account;
 
   /// Set before [PetEvent.cheer]: the song / clip / meme / game to show.
   CheerItem? pendingCheer;
@@ -211,6 +214,8 @@ class PetController extends ChangeNotifier {
         : 'Oops, something went wrong. Please try again.';
     debugPrint('Pet error: $e');
     _set(mood: PetMood.sad, held: HeldItem.none, bubble: msg);
+    // out of free AI time: guests get the sign-up sheet (20 min a day)
+    if (e is LlmException && e.outOfTime && !account.signedIn) _events.add(PetEvent.openAccount);
     await voice.say(msg);
   }
 
@@ -1073,6 +1078,7 @@ class PetController extends ChangeNotifier {
   bool get canListen => kIsWeb ? VoiceService.browserCanListen : localAi.whisperReady;
 
   void openSettings() => _events.add(PetEvent.openSettings);
+  void openAccount() => _events.add(PetEvent.openAccount);
 
   @override
   void dispose() {

@@ -2,11 +2,16 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'account_service.dart';
 import 'settings_service.dart';
 
 class LlmException implements Exception {
-  LlmException(this.message);
+  LlmException(this.message, {this.code = ''});
   final String message;
+
+  /// 'out_of_time' when today's free AI time is used up.
+  final String code;
+  bool get outOfTime => code == 'out_of_time';
   @override
   String toString() => message;
 }
@@ -14,8 +19,11 @@ class LlmException implements Exception {
 /// Talks to whichever cloud AI the user picked. Every reply is kept to
 /// three sentences or fewer so the pet can read it aloud quickly.
 class LlmService {
-  LlmService(this.settings);
+  LlmService(this.settings, {this.account});
   final SettingsService settings;
+
+  /// For the built-in "Cozy Pal AI" (OpenRouter through the Cozy Pal server).
+  final AccountService? account;
 
   static const _timeout = Duration(seconds: 45);
 
@@ -80,6 +88,7 @@ class LlmService {
   /// True when a cloud AI is set up (key saved, or a keyless custom server).
   Future<bool> isConfigured() async {
     final p = settings.aiProvider;
+    if (p == AiProvider.cozy) return account != null && !(account!.quota?.empty ?? false);
     if (settings.modelFor(p).isEmpty) return false;
     if (p == AiProvider.custom) return true;
     return (await settings.apiKeyFor(p) ?? '').isNotEmpty;
@@ -109,6 +118,14 @@ class LlmService {
 
   Future<String> _complete(String system, String user) async {
     final provider = settings.aiProvider;
+    if (provider == AiProvider.cozy) {
+      if (account == null) throw LlmException('The built-in AI isn\'t available in this build.');
+      try {
+        return await account!.chat(system, user);
+      } on AccountException catch (e) {
+        throw LlmException(e.message, code: e.code);
+      }
+    }
     final model = settings.modelFor(provider);
     final key = await settings.apiKeyFor(provider) ?? '';
     if (model.isEmpty) {
@@ -119,6 +136,8 @@ class LlmService {
     }
 
     switch (provider) {
+      case AiProvider.cozy:
+        throw StateError('handled above');
       case AiProvider.claude:
         final res = await _post(
           Uri.parse('https://api.anthropic.com/v1/messages'),
@@ -228,10 +247,13 @@ class LlmService {
 
   /// Lists the models the user's key can use, for the picker in Settings.
   Future<List<String>> listModels(AiProvider provider) async {
+    if (provider == AiProvider.cozy) return [AiProvider.cozy.defaultModel];
     final key = await settings.apiKeyFor(provider) ?? '';
     late Uri url;
     final headers = <String, String>{};
     switch (provider) {
+      case AiProvider.cozy:
+        return [AiProvider.cozy.defaultModel];
       case AiProvider.claude:
         url = Uri.parse('https://api.anthropic.com/v1/models?limit=100');
         headers.addAll({'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true'});

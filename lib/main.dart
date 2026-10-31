@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'ai/local_ai.dart';
 import 'ai/model_manager.dart';
 import 'pet_controller.dart';
+import 'services/account_service.dart';
 import 'services/actions_service.dart';
 import 'services/cheer_service.dart';
 import 'services/email_service.dart';
@@ -34,9 +35,10 @@ Future<void> main() async {
   await cheer.load(); // also deletes anything left over from last time
   await cheer.learnFromNotesOnce(notes.notes.map((n) => n.text));
 
+  final account = AccountService(settings);
   final pet = PetController(
     settings: settings,
-    llm: LlmService(settings),
+    llm: LlmService(settings, account: account),
     email: email,
     notes: notes,
     voice: voice,
@@ -45,6 +47,7 @@ Future<void> main() async {
     memory: memory,
     actions: ActionsService(),
     cheer: cheer,
+    account: account,
   );
 
   runApp(CozyPalApp(pet: pet));
@@ -53,6 +56,8 @@ Future<void> main() async {
   // the memory index builds itself once Needle is ready. Then refresh mail.
   localAi.loadModels().catchError((Object e) => debugPrint('Model load failed: $e'));
   memory.syncMail().catchError((Object e) => debugPrint('Mail sync failed: $e'));
+  // a guest account for the free built-in AI (or the saved one)
+  if (settings.aiProvider == AiProvider.cozy) account.ensureSession();
 }
 
 class CozyPalApp extends StatelessWidget {
