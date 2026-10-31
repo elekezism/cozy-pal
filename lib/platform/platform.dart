@@ -10,4 +10,13 @@ bool get isAndroid => !kIsWeb && defaultTargetPlatform == TargetPlatform.android
 /// Apple's song search, meme-api.com and itch.io go through this site's own
 /// Cloudflare Pages Function (functions/api/fetch.js), which only forwards to
 /// a short allow-list of hosts. On phones the URL is used as is.
-Uri viaProxy(Uri url) => kIsWeb ? Uri.parse('${Uri.base.origin}/api/fetch?url=${Uri.encodeComponent(url.toString())}') : url;
+///
+/// Apple's search (itunes.apple.com) and artwork (mzstatic.com) allow
+/// browsers directly, and block Cloudflare's shared servers, so those skip
+/// the proxy.
+Uri viaProxy(Uri url) {
+  if (!kIsWeb) return url;
+  final h = url.host;
+  if (h == 'itunes.apple.com' || h.endsWith('.mzstatic.com')) return url;
+  return Uri.parse('${Uri.base.origin}/api/fetch?url=${Uri.encodeComponent(url.toString())}');
+}
