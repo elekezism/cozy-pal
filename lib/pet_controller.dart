@@ -120,7 +120,8 @@ class PetController extends ChangeNotifier {
       PetMood.dropping => '$n is filing your note',
       PetMood.digging => '$n is digging through your notes',
       PetMood.reading => '$n is reading to you',
-      PetMood.walking => busy ? '$n is on the way' : '$n is wandering',
+      // it often walks back while still saying the answer
+      PetMood.walking => talking ? '$n is talking to you' : busy ? '$n is on the way' : '$n is wandering',
       PetMood.sad => '$n needs a hand',
       PetMood.happy => '$n is happy',
       PetMood.dancing => '$n is dancing with you',

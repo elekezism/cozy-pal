@@ -17,17 +17,16 @@ export FLUTTER_SUPPRESS_ANALYTICS=true
 flutter config --no-analytics --enable-web >/dev/null
 flutter --version
 
-# web/ only holds our extra files (oauth.html, _headers); let Flutter add the rest
+# web/ holds our own files (manifest, icons, offline cache, oauth.html,
+# _headers); flutter create skips files that exist and adds the rest
 flutter create --org com.cozypal --project-name cozy_pal --platforms web . >/dev/null
-# friendlier page title + colors
+# friendlier page title + description, and register the offline cache
 sed -i 's|<title>.*</title>|<title>Cozy Pal</title>|' web/index.html
 sed -i 's|content="A new Flutter project."|content="A cozy pet that helps you: notes, mail, answers, and cheering you up."|' web/index.html || true
-if [ -f web/manifest.json ]; then
-  sed -i 's/"name": "cozy_pal"/"name": "Cozy Pal"/; s/"short_name": "cozy_pal"/"short_name": "Cozy Pal"/; s/"background_color": "#[0-9A-Fa-f]*"/"background_color": "#BDE8F1"/; s/"theme_color": "#[0-9A-Fa-f]*"/"theme_color": "#BDE8F1"/' web/manifest.json
-fi
+grep -q register_sw.js web/index.html || sed -i 's|</body>|  <script src="register_sw.js" defer></script>\n</body>|' web/index.html
 
 flutter pub get
 flutter build web --release
 # copy our extra web files (flutter build copies web/*, but make sure)
-cp web/oauth.html web/_headers build/web/ 2>/dev/null || true
+cp web/oauth.html web/_headers web/sw.js web/register_sw.js build/web/ 2>/dev/null || true
 echo "Built $(du -sh build/web | cut -f1) into build/web"

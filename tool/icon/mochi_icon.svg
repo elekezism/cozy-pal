@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Cozy Pal app icon: Mochi's face on the sky blue of the room -->
+  <rect width="512" height="512" fill="#BDE8F1"/>
+  <ellipse cx="256" cy="420" rx="190" ry="40" fill="#ffffff" opacity="0.7"/>
+  <g stroke="#5A3A2A" stroke-width="12" stroke-linejoin="round" stroke-linecap="round">
+    <!-- ears -->
+    <path d="M128 214 L150 92 L232 160 Z" fill="#F4A65A"/>
+    <path d="M384 214 L362 92 L280 160 Z" fill="#F4A65A"/>
+    <path d="M150 180 L160 124 L204 160 Z" fill="#F7C6C0" stroke-width="0"/>
+    <path d="M362 180 L352 124 L308 160 Z" fill="#F7C6C0" stroke-width="0"/>
+    <!-- head -->
+    <ellipse cx="256" cy="284" rx="158" ry="136" fill="#F4A65A"/>
+    <!-- muzzle -->
+    <ellipse cx="256" cy="330" rx="88" ry="62" fill="#FCEBD7" stroke-width="0"/>
+    <!-- stripes -->
+    <path d="M228 156 L236 196 M256 150 L256 194 M284 156 L276 196" fill="none" stroke="#D9803A" stroke-width="12"/>
+  </g>
+  <g fill="#5A3A2A">
+    <ellipse cx="196" cy="276" rx="16" ry="20"/>
+    <ellipse cx="316" cy="276" rx="16" ry="20"/>
+  </g>
+  <circle cx="202" cy="268" r="5" fill="#ffffff"/>
+  <circle cx="322" cy="268" r="5" fill="#ffffff"/>
+  <path d="M240 312 Q256 324 272 312 Q256 304 240 312 Z" fill="#E07A7A" stroke="#5A3A2A" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M256 322 Q246 344 228 336 M256 322 Q266 344 284 336" fill="none" stroke="#5A3A2A" stroke-width="8" stroke-linecap="round"/>
+  <ellipse cx="160" cy="320" rx="22" ry="12" fill="#F28C8C" opacity="0.55"/>
+  <ellipse cx="352" cy="320" rx="22" ry="12" fill="#F28C8C" opacity="0.55"/>
+  <!-- bow -->
+  <g stroke="#5A3A2A" stroke-width="8" stroke-linejoin="round">
+    <path d="M322 168 L292 146 L296 190 Z" fill="#E86A6A"/>
+    <path d="M322 168 L352 146 L348 190 Z" fill="#E86A6A"/>
+    <circle cx="322" cy="168" r="10" fill="#C94F4F"/>
+  </g>
+</svg>

@@ -12,7 +12,9 @@ class WorldBox {
 /// Isometric projection fitted to the room area of the screen.
 class RoomLayout {
   RoomLayout(this.size)
-      : t = math.min(size.width * 1.32 / 17.3, size.height / 17.2) {
+      // the room is 18 units wide on screen (walls included): keep it inside
+      // the width with a small margin, so narrow phones don't cut the walls off
+      : t = math.min(size.width * 0.96 / 18.0, size.height / 17.2) {
     ox = size.width / 2;
     oy = (size.height - 17.9 * t) / 2 + 7.6 * t;
   }
